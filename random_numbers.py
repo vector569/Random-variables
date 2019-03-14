@@ -27,36 +27,35 @@ class distributions:
 		# x in R
 		temp = (np.exp(-(abs(x-u))/b))/(2*b)
 		return temp
-	def plot(x,y,xlabel,ylabel):
+	def plot(self,x,y,xlabel,ylabel):
 		plt.plot(x,y)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
 		plt.show()
 class metro_hastings:
-	def q(x):
+	def q(self,x):
 		y = np.random.normal(0,1,1)[0]
 		return y
 
-	def alpha(x,y,distr,obj):
+	def alpha(self,x,y,distr,obj):
 		#print(x,y,distr)
-		temp1 = getattr(obj,distr)(x)*q(x)
+		temp1 = getattr(obj,distr)(x)*self.q(x)
 		if temp1>0:
-			temp2 = getattr(obj,distr)(y)*q(y)
+			temp2 = getattr(obj,distr)(y)*self.q(y)
 			temp2 = min(temp2/temp1,1)
 		else:
 			temp2 = 1
 		return temp2
 
-	def mha(x_j,distr,obj):
+	def mha(self,x_j,distr,obj):
 		u = np.random.uniform(0,1,1)[0]
-		y = q(x_j)
-		alp = alpha(x_j,y,distr,obj)
+		y = self.q(x_j)
+		alp = self.alpha(x_j,y,distr,obj)
 		if u<=alp:
 			return y
 		return x_j
 
-
-	def simulate(n_iter,distr,obj,resolution,domain_min,domain_max):
+	def simulate(self,n_iter,distr,obj,resolution,domain_min,domain_max):
 		x_p = np.arange(domain_min,domain_max,resolution)
 		N = len(x_p)
 		y_freq = [0]*N
@@ -68,7 +67,7 @@ class metro_hastings:
 			arr = [x0]
 			for i in range(N):
 				y_p.append(getattr(obj,distr)(x_p[i]))
-				x_a = mha(arr[-1],distr,obj)
+				x_a = self.mha(arr[-1],distr,obj)
 				arr.append(x_a)
 
 			for i in range(N):
@@ -80,7 +79,6 @@ class metro_hastings:
 			if k%(n_iter/10) == 0:
 				print(str((k/(n_iter/10)+1)*10) + ' \% completed')
 		return x_p,y_p,y_freq
-
 
 n_iter = 50
 distr = 'laplace'
