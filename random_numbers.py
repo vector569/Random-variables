@@ -1,3 +1,5 @@
+# Metropolis-Hastings Algorithm
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -25,63 +27,70 @@ class distributions:
 		# x in R
 		temp = (np.exp(-(abs(x-u))/b))/(2*b)
 		return temp
-
-
-def q(x):
-	y = np.random.normal(0,1,1)[0]
-	return y
-def alpha(x,y,distr,obj):
-	#print(x,y,distr)
-	temp1 = getattr(obj,distr)(x)*q(x)
-	if temp1>0:
-		temp2 = getattr(obj,distr)(y)*q(y)
-		temp2 = min(temp2/temp1,1)
-	else:
-		temp2 = 1
-	return temp2
-
-def metropolis(x_j,distr,obj):
-	u = np.random.uniform(0,1,1)[0]
-	y = q(x_j)
-	alp = alpha(x_j,y,distr,obj)
-	if u<=alp:
+	def plot(x,y,xlabel,ylabel):
+		plt.plot(x,y)
+		plt.xlabel(xlabel)
+		plt.ylabel(ylabel)
+		plt.show()
+class metro_hastings:
+	def q(x):
+		y = np.random.normal(0,1,1)[0]
 		return y
-	return x_j
 
-obj = distributions()
+	def alpha(x,y,distr,obj):
+		#print(x,y,distr)
+		temp1 = getattr(obj,distr)(x)*q(x)
+		if temp1>0:
+			temp2 = getattr(obj,distr)(y)*q(y)
+			temp2 = min(temp2/temp1,1)
+		else:
+			temp2 = 1
+		return temp2
+
+	def mha(x_j,distr,obj):
+		u = np.random.uniform(0,1,1)[0]
+		y = q(x_j)
+		alp = alpha(x_j,y,distr,obj)
+		if u<=alp:
+			return y
+		return x_j
+
+
+	def simulate(n_iter,distr,obj,resolution,domain_min,domain_max):
+		x_p = np.arange(domain_min,domain_max,resolution)
+		N = len(x_p)
+		y_freq = [0]*N
+
+		for k in range(n_iter):
+			x0 = 0
+			arr = []
+			y_p = []
+			arr = [x0]
+			for i in range(N):
+				y_p.append(getattr(obj,distr)(x_p[i]))
+				x_a = mha(arr[-1],distr,obj)
+				arr.append(x_a)
+
+			for i in range(N):
+				val = arr[i]
+				j = int((val - domain_min)/resolution)
+				if j>=N:
+					j = N-1
+				y_freq[j] += 1/(N*resolution*n_iter)
+			if k%(n_iter/10) == 0:
+				print(str((k/(n_iter/10)+1)*10) + ' \% completed')
+		return x_p,y_p,y_freq
+
+
+n_iter = 50
+distr = 'laplace'
+obj1 = distributions()
+obj2 = metro_hastings()
 resolution = 0.004
 domain_min = -8
 domain_max = 8
-x_p = np.arange(domain_min,domain_max,resolution)
-N = len(x_p)
-y_freq = [0]*N
-n_iter = 500
-distr = 'laplace'
-for k in range(n_iter):
-	x0 = 0
-	arr = []
-	y_p = []
-	arr = [x0]
-	for i in range(N):
-		y_p.append(exec('obj.'+distr+'(x_p[i])'))
-		x_a = metropolis(arr[-1],distr,obj)
-		arr.append(x_a)
 
-	for i in range(N):
-		val = arr[i]
-		j = int((val - domain_min)/resolution)
-		if j>=N:
-			j = N-1
-		y_freq[j] += 1/(N*resolution*n_iter)
-	if k%(n_iter/10) == 0:
-		print(str((k/(n_iter/10)+1)*10) + ' \% completed')
+x_p,y_p,y_freq = obj2.simulate(n_iter,distr,obj1,resolution,domain_min,domain_max)
 
-plt.plot(x_p,y_p)
-plt.xlabel('X')
-plt.ylabel('p(X=x) Actual')
-plt.show()
-
-plt.plot(x_p,y_freq)
-plt.xlabel('X')
-plt.ylabel('p(X=x) Simulated')
-plt.show()
+obj1.plot(x_p,y_p,'X','p(X=x) Actual')
+obj1.plot(x_p,y_freq,'X','p(X=x) Simulated')
