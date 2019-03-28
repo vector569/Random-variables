@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 # n >= 3
 # Array of [State,Value,Actions] for i in 1 to n*2
 class Gridworld:
@@ -7,29 +8,31 @@ class Gridworld:
 		std = args[1]
 		self.n = n
 		self.grid = []
-		self.start_state = 1
-		self.terminal_state = n*n
+		self.start_state = 0
+		self.terminal_state = n*n-1
 		for i in range(n*n):
-			self.grid.append([i+1,(np.random.random(1)[0]-0.5)*2*std,self.transitions(i+1)])
+			self.grid.append([i,(np.random.random(1)[0]-0.5)*2*std,self.transitions(i)])
+			#self.grid.append([i,i,self.transitions(i)])
+
             
 	def classification(self,state):
 		x = self.n
 		cat = ""
-		if state == 1:
+		if state == 0:
 			cat = "BLC" #Bottom left corner
-		elif state == x:
+		elif state == x-1:
 			cat = "BRC" #Bottom right corner
-		elif state == (x*x-x+1):
+		elif state == (x*x-x):
 			cat = "TLC" #Top left corner
-		elif state == (x*x):
+		elif state == (x*x-1):
 			cat = "TRC" #Top right corner
-		elif 1<state and state<x:
+		elif 0<state and state<x-1:
 			cat = "BE" #Bottom edge
-		elif (x*x-x+1)<state and state<(x*x):
+		elif (x*x-x)<state and state<(x*x-1):
 			cat = "TE" #Top edge
-		elif state%x == 0 and 1<state/x and state/x<x:
+		elif (state+1)%x == 0 and 1<(state+1)/x and (state+1)/x<x:
 			cat = "RE" #Right edge
-		elif (state-1)%x == 0 and 0<((state-1)/x) and ((state-1)/x)<(x-1):
+		elif state%x == 0 and 0<(state/x) and (state/x)<(x-1):
 			cat = "LE" #Left edge
 		else:
 			cat = "M" #Middle
@@ -74,3 +77,9 @@ class Gridworld:
 			return(state+1)
 		elif action == "L":
 			return(state-1)
+
+	def take_action(self,state,action):
+		ns = self.new_state(state,action)
+		noise = 0 #Default = 2
+		reward = self.grid[ns][1] + (np.random.random(1)[0]-0.5)*noise
+		return [ns,reward]
